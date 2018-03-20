@@ -29,4 +29,3 @@ WideWorldImporters.Purchasing.SupplierCategories
 WideWorldImporters.Sales.BuyingGroups
 WideWorldImporters.Sales.Invoices
 WideWorldImporters.Sales.CustomerCategories
-exec WideWorldImporters.dbo.GetDATEDIMENSIONS
