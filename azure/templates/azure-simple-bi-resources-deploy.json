@@ -69,7 +69,6 @@
                 "type": "systemAssigned"
             }
         },
-
         {
             "apiVersion": "2014-04-01",
             "name": "[variables('dwSqlServerName')]",
