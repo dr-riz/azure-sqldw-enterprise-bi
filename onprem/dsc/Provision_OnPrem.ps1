@@ -22,6 +22,7 @@ Configuration Provision_OnPrem
         $downloadsFolder = Join-Path $packageFolder "\Downloads"
         $logFilesFolder = Join-Path $packageFolder "\Logs"
         $dataFolder = Join-Path $packageFolder "\Data"
+        $projectFolder = Join-Path $packageFolder "\reference-architectures"
 
         # AzCopy
         $azCopyLogPath = Join-Path $logFilesFolder "\azcopy_log.txt"
@@ -180,34 +181,6 @@ Configuration Provision_OnPrem
             DependsOn = "[File]DownloadsFolder"
         }
 
-        Script RestoreWWI
-        {
-            GetScript = {
-                return @{Result=""}
-            }
-            SetScript = {
-                Write-Verbose "Restoring database '$Using:databaseName'"
-                # Get the list of files for the database, re-path them, and create the RelocateFile objects for the Restore-SqlDatabase cmdlet
-                $relocateFiles = Invoke-Sqlcmd -Query "RESTORE FILELISTONLY FROM DISK = '$Using:wwiBakPath'" | `
-                    Select-Object -Property LogicalName,@{Name="PhysicalName"; Expression = {Join-Path $Using:dataFolder (Split-Path $_.PhysicalName -Leaf)}} | `
-                    ForEach-Object {New-Object Microsoft.SqlServer.Management.Smo.RelocateFile($_.LogicalName, $_.PhysicalName)}
-                Restore-SqlDatabase -ServerInstance $env:ComputerName -Database "$Using:databaseName" -BackupFile $Using:wwiBakPath -RelocateFile $relocateFiles
-            }
-            TestScript = {
-                Write-Verbose "Finding database '$Using:databaseName' on server instance '$env:ComputerName'"
-                Get-SqlDatabase -ServerInstance $env:ComputerName -Name "$Using:databaseName" -ErrorAction SilentlyContinue | `
-                    Tee-Object -Variable databaseExists | Out-Null
-                if ([bool]$databaseExists) {
-                    Write-Verbose "Database: '$Using:databaseName' exists"
-                } else {
-                    Write-Verbose "Database: '$Using:databaseName' does not exist"
-                }
-                return [bool]$databaseExists
-            }
-            DependsOn = @("[File]DataFolder", "[Script]DownloadWWIBackup")
-            PsDscRunAsCredential = $SqlUserCredentials
-        }
-
         # Install Git for Windows
         Script GitInstall
         {
@@ -232,7 +205,63 @@ Configuration Provision_OnPrem
                 return $gitExists
             }
             Credential = $SqlUserCredentials
-            DependsOn = @("[Script]GitDownload", "[File]LogsFolder", "[Script]RestoreWWI")
+            DependsOn = @("[Script]GitDownload", "[File]LogsFolder")
+        }
+
+        # Clone our repo
+        Script CloneProject
+        {
+            GetScript = {
+                return @{Result=""}
+            }
+            SetScript = {
+                $gitPath = "C:\Program Files\Git\cmd\git.exe"
+                Write-Verbose "Cloning project..."
+                Start-Process -Wait -FilePath $gitPath -ArgumentList "clone", "https://github.com/mspnp/reference-architectures.git", `
+                    "--branch", "master", "--depth", "1", "--single-branch", "--no-checkout" -WorkingDirectory $Using:packageFolder
+                Start-Process -Wait -FilePath $gitPath -ArgumentList "config", "core.sparseCheckout", "true" -WorkingDirectory $Using:projectFolder
+                "data/*" | Out-File -Encoding ascii (Join-Path $Using:projectFolder "\.git\info\sparse-checkout")
+                Start-Process -Wait -FilePath $gitPath -ArgumentList "checkout", "master" -WorkingDirectory $Using:projectFolder
+            }
+            TestScript = {
+                Write-Verbose "Finding project directory"
+                $cloneExists = Test-Path $Using:projectFolder
+                if ($cloneExists) {
+                    Write-Verbose "Project directory found"
+                }
+
+                return $cloneExists
+            }
+            DependsOn = @("[Script]GitInstall", "[File]PackageFolder")
+        }
+
+        Script RestoreWWI
+        {
+            GetScript = {
+                return @{Result=""}
+            }
+            SetScript = {
+                Write-Verbose "Restoring database '$Using:databaseName'"
+                # Get the list of files for the database, re-path them, and create the RelocateFile objects for the Restore-SqlDatabase cmdlet
+                $relocateFiles = Invoke-Sqlcmd -Query "RESTORE FILELISTONLY FROM DISK = '$Using:wwiBakPath'" | `
+                    Select-Object -Property LogicalName,@{Name="PhysicalName"; Expression = {Join-Path $Using:dataFolder (Split-Path $_.PhysicalName -Leaf)}} | `
+                    ForEach-Object {New-Object Microsoft.SqlServer.Management.Smo.RelocateFile($_.LogicalName, $_.PhysicalName)}
+                Restore-SqlDatabase -ServerInstance $env:ComputerName -Database "$Using:databaseName" -BackupFile $Using:wwiBakPath -RelocateFile $relocateFiles
+                Invoke-Sqlcmd -InputFile (Join-Path $Using:projectFolder "\data\enterprise_bi_sqldw\onprem\sql_scripts\GET_DATE_DIMENSIONS.sql")
+            }
+            TestScript = {
+                Write-Verbose "Finding database '$Using:databaseName' on server instance '$env:ComputerName'"
+                Get-SqlDatabase -ServerInstance $env:ComputerName -Name "$Using:databaseName" -ErrorAction SilentlyContinue | `
+                    Tee-Object -Variable databaseExists | Out-Null
+                if ([bool]$databaseExists) {
+                    Write-Verbose "Database: '$Using:databaseName' exists"
+                } else {
+                    Write-Verbose "Database: '$Using:databaseName' does not exist"
+                }
+                return [bool]$databaseExists
+            }
+            DependsOn = @("[File]DataFolder", "[Script]DownloadWWIBackup", "[Script]CloneProject")
+            PsDscRunAsCredential = $SqlUserCredentials
         }
 
         # Install AzCopy
@@ -244,7 +273,7 @@ Configuration Provision_OnPrem
             Name = "Microsoft Azure Storage Tools - v7.1.0"
             Arguments = "/passive /norestart"
             LogPath = $azCopyLogPath
-            DependsOn = @("[Script]GitInstall", "[xRemoteFile]AzCopyDownload", "[File]LogsFolder")
+            DependsOn = @("[Script]CloneProject", "[xRemoteFile]AzCopyDownload", "[File]LogsFolder")
         }
 
         # Mount the SSDT ISO.  We need to wait for the AzCopy install to finish
