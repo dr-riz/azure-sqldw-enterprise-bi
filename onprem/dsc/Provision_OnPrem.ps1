@@ -18,7 +18,7 @@ Configuration Provision_OnPrem
             InstallationPolicy = "Trusted"
         }
 
-        $packageFolder = "c:\SimpleBI"
+        $packageFolder = "c:\SampleDataFiles"
         $downloadsFolder = Join-Path $packageFolder "\Downloads"
         $logFilesFolder = Join-Path $packageFolder "\Logs"
         $dataFolder = Join-Path $packageFolder "\Data"
@@ -28,6 +28,7 @@ Configuration Provision_OnPrem
         $azCopyLogPath = Join-Path $logFilesFolder "\azcopy_log.txt"
         $azCopyDownloadUri = "http://aka.ms/downloadazcopy"
         $azCopyMsiPath = Join-Path $downloadsFolder "\MicrosoftAzureStorageTools.msi"
+        $azCopyPath = "c:\Program Files (x86)\Microsoft SDKs\Azure\AzCopy"
 
         # SQL Server Data Tools
         $ssdtLogPath = Join-Path $logFilesFolder "\ssdt_log.txt"
@@ -105,7 +106,7 @@ Configuration Provision_OnPrem
             Name = "Path"
             Ensure = "Present"
             Path = $true
-            Value = "c:\Program Files (x86)\Microsoft SDKs\Azure\AzCopy"
+            Value = $azCopyPath
         }
 
         # Download AzCopy MSI
@@ -265,14 +266,25 @@ Configuration Provision_OnPrem
         }
 
         # Install AzCopy
-        Package AzCopyInstall
+        Script AzCopyInstall
         {
-            Ensure = "Present"
-            Path = $azCopyMsiPath
-            ProductId = "{27C14E51-3B55-46A6-A3C0-56613E1260B2}"
-            Name = "Microsoft Azure Storage Tools - v7.1.0"
-            Arguments = "/passive /norestart"
-            LogPath = $azCopyLogPath
+            GetScript = {
+                return @{Result=""}
+            }
+            SetScript = {
+                Write-Verbose "Installing AzCopy"
+                Start-Process -Wait -FilePath "c:\Windows\System32\msiexec.exe" `
+                    -ArgumentList "/package `"$Using:azCopyMsiPath`"", "/qn", "/log `"$Using:azCopyLogPath`""
+            }
+            TestScript = {
+                Write-Verbose "Finding AzCopy"
+                $exists = Test-Path $Using:azCopyPath
+                if ($exists) {
+                    Write-Verbose "AzCopy found"
+                }
+
+                return $exists
+            }
             DependsOn = @("[Script]CloneProject", "[xRemoteFile]AzCopyDownload", "[File]LogsFolder")
         }
 
@@ -283,7 +295,7 @@ Configuration Provision_OnPrem
             ImagePath = $ssdtIsoPath
             DriveLetter = "Z"
             Ensure = "Present"
-            DependsOn = @("[xRemoteFile]SSDTIsoDownload", "[Package]AzCopyInstall")
+            DependsOn = @("[xRemoteFile]SSDTIsoDownload", "[Script]AzCopyInstall")
         }
 
         # Wait for the ISO to mount
@@ -335,21 +347,32 @@ Configuration Provision_OnPrem
         }
 
         # Install Power BI Desktop
-        Package PowerBIDesktopInstall
+        Script PowerBIDesktopInstall
         {
-            Ensure = "Present"
-            Path = $powerBIMsiPath
-            ProductId = "{89A52314-C097-401F-A45B-14C8B67702FA}"
-            Name = "Microsoft Power BI Desktop (x64)"
-            Arguments = "/passive /norestart ACCEPT_EULA=1"
-            LogPath = $powerBILogPath
+            GetScript = {
+                return @{Result=""}
+            }
+            SetScript = {
+                Write-Verbose "Installing Microsoft Power BI Desktop (x64)"
+                Start-Process -Wait -FilePath "c:\Windows\System32\msiexec.exe" `
+                    -ArgumentList "/package `"$Using:powerBIMsiPath`"", "/qn", "/log `"$Using:powerBILogPath`"", "/norestart", "ACCEPT_EULA=1"
+            }
+            TestScript = {
+                Write-Verbose "Finding Microsoft Power BI Desktop (x64)"
+                $exists = Test-Path "C:\Program Files\Microsoft Power BI Desktop"
+                if ($exists) {
+                    Write-Verbose "Microsoft Power BI Desktop (x64) found"
+                }
+
+                return $exists
+            }
             DependsOn = @("[Script]UnmountSsdtIso", "[xRemoteFile]PowerBIDownload", "[File]LogsFolder")
         }
 
         xPendingReboot RebootAfterInstalls
         {
             Name = "RebootAfterInstalls"
-            DependsOn = "[Package]PowerBIDesktopInstall"
+            DependsOn = "[Script]PowerBIDesktopInstall"
         }
     }
 }
