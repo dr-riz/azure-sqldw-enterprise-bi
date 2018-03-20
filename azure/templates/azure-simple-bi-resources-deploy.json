@@ -45,14 +45,16 @@
         {
             "name":"[variables('storageAccountName')]",
             "type": "Microsoft.Storage/storageAccounts",
-            "apiVersion": "2016-01-01",
+            "apiVersion": "2017-10-01",
             "sku": {
-              "name": "Premium_LRS"
+              "name": "Standard_RAGRS"
             },
-            "kind": "Storage",
+            "kind": "BlobStorage",
             "location": "[resourceGroup().location]",
             "tags": {},
             "properties": {
+              "accessTier": "Hot",
+              "supportsHttpsTrafficOnly": true,
               "encryption":{
                 "services":{
                   "blob":{
@@ -61,9 +63,12 @@
                 },
                 "keySource":"Microsoft.Storage"
               }
+            },
+            "dependsOn": [],
+            "identity": {
+                "type": "systemAssigned"
             }
         },
- 
         {
             "apiVersion": "2014-04-01",
             "name": "[variables('dwSqlServerName')]",
