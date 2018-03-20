@@ -180,7 +180,7 @@ param(
   }
   
   $StoredProcArray =@(
-    "WideWorldImporters.dbo.GetDATEDIMENSIONS"
+    "WideWorldImporters.dbo.GetDateDimensions"
   )
   $TableNames |Invoke-TableBulkCopy | Out-Null 
   $StoredProcArray | Invoke-StoredProcedure | Out-Null

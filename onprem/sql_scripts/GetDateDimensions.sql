@@ -1,16 +1,16 @@
 USE [WideWorldImporters]
 GO
 
-/****** Object:  StoredProcedure [dbo].[GETDATEDIMENSIONS]    Script Date: 3/2/2018 7:08:04 PM ******/
+/****** Object:  StoredProcedure [dbo].[GetDateDimensions]    Script Date: 3/2/2018 7:08:04 PM ******/
 IF EXISTS ( SELECT * 
             FROM   sysobjects 
-            WHERE  id = object_id(N'[dbo].[GETDATEDIMENSIONS]') 
+            WHERE  id = object_id(N'[dbo].[GetDateDimensions]') 
                    and OBJECTPROPERTY(id, N'IsProcedure') = 1 )
 BEGIN
-    DROP PROCEDURE [dbo].[GETDATEDIMENSIONS]
+    DROP PROCEDURE [dbo].[GetDateDimensions]
 END
 
-/****** Object:  StoredProcedure [dbo].[GETDATEDIMENSIONS]    Script Date: 3/2/2018 7:08:04 PM ******/
+/****** Object:  StoredProcedure [dbo].[GetDateDimensions]    Script Date: 3/2/2018 7:08:04 PM ******/
 SET ANSI_NULLS ON
 GO
 
@@ -19,7 +19,7 @@ GO
 
 
 
-CREATE PROCEDURE [dbo].[GETDATEDIMENSIONS]
+CREATE PROCEDURE [dbo].[GetDateDimensions]
 AS
 
 DECLARE @StartDate datetime2

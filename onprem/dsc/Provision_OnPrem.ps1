@@ -248,7 +248,7 @@ Configuration Provision_OnPrem
                     Select-Object -Property LogicalName,@{Name="PhysicalName"; Expression = {Join-Path $Using:dataFolder (Split-Path $_.PhysicalName -Leaf)}} | `
                     ForEach-Object {New-Object Microsoft.SqlServer.Management.Smo.RelocateFile($_.LogicalName, $_.PhysicalName)}
                 Restore-SqlDatabase -ServerInstance $env:ComputerName -Database "$Using:databaseName" -BackupFile $Using:wwiBakPath -RelocateFile $relocateFiles
-                Invoke-Sqlcmd -InputFile (Join-Path $Using:projectFolder "\data\enterprise_bi_sqldw\onprem\sql_scripts\GET_DATE_DIMENSIONS.sql")
+                Invoke-Sqlcmd -InputFile (Join-Path $Using:projectFolder "\data\enterprise_bi_sqldw\onprem\sql_scripts\GetDateDimensions.sql")
             }
             TestScript = {
                 Write-Verbose "Finding database '$Using:databaseName' on server instance '$env:ComputerName'"
