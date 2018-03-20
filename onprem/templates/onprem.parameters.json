@@ -8,7 +8,7 @@
                     "type": "VirtualNetwork",
                     "settings": [
                         {
-                            "name": "ra-simple-bi-onprem-vnet",
+                            "name": "ra-onprem-vnet",
                             "addressPrefixes": [
                                 "10.0.0.0/16"
                             ],
@@ -43,7 +43,7 @@
                             "diskSizeGB": 1000
                         },
                         "virtualNetwork": {
-                            "name": "ra-simple-bi-onprem-vnet"
+                            "name": "ra-onprem-vnet"
                         },
                         "nics": [
                             {
