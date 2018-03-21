@@ -108,12 +108,13 @@
                         "[parameters('dwServerName')]"
                     ],
                     "location": "[variables('deploymentLocation')]",
-                    "name": "AllowAllWindowsAzureIps",
+                    "name": "[variables('dwDatabaseName')]",
                     "properties": {
-                        "endIpAddress": "0.0.0.0",
-                        "startIpAddress": "0.0.0.0"
+                        "edition": "DataWarehouse",
+                        "requestedServiceObjectiveName": "[parameters('dwPerformanceTier')]",
+                        "collation": "[variables('collation')]"
                     },
-                    "type": "firewallrules"
+                    "type": "databases"
                 },
                 {
                     "apiVersion": "2014-04-01-preview",
@@ -121,13 +122,12 @@
                         "[parameters('dwServerName')]"
                     ],
                     "location": "[variables('deploymentLocation')]",
-                    "name": "[variables('dwDatabaseName')]",
+                    "name": "AllowAllWindowsAzureIps",
                     "properties": {
-                        "edition": "DataWarehouse",
-                        "requestedServiceObjectiveId": "[parameters('dwPerformanceTier')]",
-                        "collation": "[variables('collation')]"
+                        "endIpAddress": "0.0.0.0",
+                        "startIpAddress": "0.0.0.0"
                     },
-                    "type": "databases"
+                    "type": "firewallrules"
                 }
             ],
             "type": "Microsoft.Sql/servers"
