@@ -22,7 +22,7 @@ CREATE MASTER KEY;
 CREATE DATABASE SCOPED CREDENTIAL WAREHOUSEBLOBACCESSCRENDENTIAL
 WITH
     IDENTITY = 'user',
-    SECRET = 'h/rbyt3FRef5dPHBWojpoauoHACOcoLDxuxRCl92xFQND8533dZtyfwlZ1hudOwAMf6XUrt2gZsWuShuxNTSDw=='
+    SECRET = '<storage account key>'
 ;
 
 
@@ -30,7 +30,7 @@ CREATE EXTERNAL DATA SOURCE WAREHOUSEEXTERNALDATASOURCE
 WITH
 (
     TYPE = Hadoop,
-    LOCATION = 'wasbs://wwi@wwiadfintegration.blob.core.windows.net',
+    LOCATION = 'wasbs://wwi@<storage account name>.blob.core.windows.net',
 	CREDENTIAL = WAREHOUSEBLOBACCESSCRENDENTIAL
 );
 
