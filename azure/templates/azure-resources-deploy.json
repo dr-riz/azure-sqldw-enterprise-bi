@@ -22,14 +22,6 @@
                 "description": "Datawarehouse SQL server admin password"
                 }
         },
-        "dwPerformanceTier": {
-            "type": "string",
-            "defaultValue": "DW400",
-            "metadata": {
-                "description": "Performance Tier"
-                }
-
-        },
         "storageAccountName": {
             "type":"string",
             "maxLength": 24,
@@ -103,16 +95,21 @@
             },
             "resources": [
                 {
-                    "apiVersion": "2014-04-01-preview",
+                    "apiVersion": "2017-03-01-preview",
                     "dependsOn": [
                         "[parameters('dwServerName')]"
                     ],
                     "location": "[variables('deploymentLocation')]",
                     "name": "[variables('dwDatabaseName')]",
+                    "sku": {
+                        "name": "DW1000c",
+                        "tier": "DataWarehouse"
+                    },
+                    "kind": "v12.0,user,datawarehouse,gen2",
                     "properties": {
-                        "edition": "DataWarehouse",
-                        "requestedServiceObjectiveName": "[parameters('dwPerformanceTier')]",
-                        "collation": "[variables('collation')]"
+                        "collation": "[variables('collation')]",
+                        "maxSizeBytes": 263882790666240,
+                        "catalogcCllation": "[variables('collation')]"
                     },
                     "type": "databases"
                 },
