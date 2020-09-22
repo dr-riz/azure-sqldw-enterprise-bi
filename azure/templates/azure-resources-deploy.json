@@ -109,7 +109,7 @@
                     "properties": {
                         "collation": "[variables('collation')]",
                         "maxSizeBytes": 263882790666240,
-                        "catalogcCllation": "[variables('collation')]"
+                        "catalogCollation": "[variables('collation')]"
                     },
                     "type": "databases"
                 },
