@@ -105,7 +105,7 @@
                                 "autoUpgradeMinorVersion": true,
                                 "settings": {
                                     "configuration": {
-                                        "url": "https://raw.githubusercontent.com/mspnp/reference-architectures/master/data/enterprise_bi_sqldw/onprem/dsc/Provision_OnPrem.ps1.zip",
+                                        "url": "https://raw.githubusercontent.com/mspnp/azure-sqldw-enterprise-bi/master/onprem/dsc/Provision_OnPrem.ps1.zip",
                                         "script": "Provision_OnPrem.ps1",
                                         "function": "Provision_OnPrem"
                                     }
@@ -121,6 +121,35 @@
                             }
                         ]
                     }
+                },
+                {
+                    "type": "NetworkSecurityGroup",
+                    "settings": [
+                      {
+                        "name": "mgmt-nsg",
+                        "virtualNetworks": [
+                          {
+                            "name": "ra-onprem-vnet",
+                            "subnets": [
+                              "sql"
+                            ]
+                          }
+                        ],
+                        "securityRules": [
+                          {
+                            "name": "on-prem-rdp-allow",
+                            "direction": "Inbound",
+                            "priority": 100,
+                            "sourceAddressPrefix": "*",
+                            "sourcePortRange": "*",
+                            "destinationAddressPrefix": "*",
+                            "destinationPortRange": 3389,
+                            "access": "Allow",
+                            "protocol": "*"
+                          }
+                        ]
+                      }
+                    ]
                 }
             ]
         }
