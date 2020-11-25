@@ -38,7 +38,7 @@ First you'll deploy a VM as a simulated on-premises server, which includes SQL S
     
     ```bash
     "SqlUserCredentials": {
-      "userName": ".\\username",
+      "userName": "username",
       "password": "password"
     }
     ```
